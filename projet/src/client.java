@@ -1,82 +1,41 @@
 package src;
 
-import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Scanner;
+import java.io.BufferedReader;
+import java.io.*;
 
+/**
+ * client
+ */
 public class client {
-
     public static void main(String[] args) {
-        client client1 = new client("syo", "192.168.1.9", 5000, "HTTP");
-        client1.print();
-        client1.send();
 
-    }
+        String host = "127.0.0.1";
+        int port = 8003;
 
-    // attributs client
-    private String Name;
-    private String IP;
-    private int port;
-    private String protocole;
+        try (Socket socket = new Socket(host, port)) {
+            PrintWriter pw = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            System.out.println("Entrez votre nom : ");
+            Scanner sc = new Scanner(System.in);
+            String line = null;
 
-    // constructeur client
-    public client(String Name, String IP, int port, String protocole) {
-        this.Name = Name;
-        this.IP = IP;
-        this.port = port;
-        this.protocole = protocole;
-    }
+            line = sc.nextLine();
+            pw.println(line);
+            pw.flush();
+            System.out.println("Serveur:" + br.readLine());
+            // sc.close();
 
-    // getters et setters
-    public String getName() {
-        return Name;
-    }
+            String line2 = null;
+            System.out.println("entrez un message : ");
+            line2 = sc.nextLine();
+            pw.println(line2);
+            pw.flush();
+            sc.close();
 
-    public void setName(String name) {
-        this.Name = name;
-    }
-
-    public String getIP() {
-        return IP;
-    }
-
-    public void setIP(String iP) {
-        this.IP = iP;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public String getProtocole() {
-        return protocole;
-    }
-
-    public void setProtocole(String protocole) {
-        this.protocole = protocole;
-    }
-
-    // methode print
-    public void print() {
-        System.out.println("Name: " + Name);
-        System.out.println("IP: " + IP);
-        System.out.println("port: " + port);
-        System.out.println("protocole: " + protocole);
-    }
-
-    // methode send
-    public void send() {
-        try {
-            Socket socket = new Socket(IP, port);
-            OutputStream os = socket.getOutputStream();
-            os.write("Hello".getBytes());
-            os.close();
-            socket.close();
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
     }
 

@@ -1,84 +1,75 @@
 package src;
 
-// import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
-// import java.net.ServerSocket;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 /**
  * serveur
  */
 public class serveur {
-
     public static void main(String[] args) {
-        serveur serveur1 = new serveur();
-        serveur1.print();
-        serveur1.listen();
-    }
+        ServerSocket serveur = null;
 
-    // attributs serveur
-    private String Name;
-    private String IP;
-    private int port;
-    private String protocole;
-
-    // constructeur serveur
-    public serveur() {
-
-    }
-
-    // getters et setters
-    public String getName() {
-        return Name;
-    }
-
-    public void setName(String name) {
-        this.Name = name;
-    }
-
-    public String getIP() {
-        return IP;
-    }
-
-    public void setIP(String iP) {
-        this.IP = iP;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public String getProtocole() {
-        return protocole;
-    }
-
-    public void setProtocole(String protocole) {
-        this.protocole = protocole;
-    }
-
-    // methodes
-    public void print() {
-        System.out.println("Name: " + this.Name);
-        System.out.println("IP: " + this.IP);
-        System.out.println("Port: " + this.port);
-        System.out.println("Protocole: " + this.protocole);
-    }
-
-    // methode pour ecouter le client
-    public void listen() {
         try {
-            Socket socket = new Socket("localhost", 5000);
-            System.out.println("Client connecté sur le port" + this.port);
-            OutputStream os = socket.getOutputStream();
-            os.write("Hello".getBytes());
-            os.close();
-            socket.close();
+            serveur = new ServerSocket(8003);
+            serveur.setReuseAddress(true);
+
+            while (true) {
+                System.out.println("En attente de connexion");
+                Socket client = serveur.accept();
+                System.out.println("Connexion etablie");
+
+                ClientHandler clientSock = new ClientHandler(client);
+
+                new Thread(clientSock).start();
+            }
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
+        } finally {
+            if (serveur != null) {
+                try {
+                    serveur.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+}
+
+class ClientHandler implements Runnable {
+    private Socket clientSocket = null;
+
+    public ClientHandler(Socket clientSocket) {
+        this.clientSocket = clientSocket;
+    }
+
+    public void run() {
+        try {
+            OutputStream os = clientSocket.getOutputStream();
+            PrintWriter pw = new PrintWriter(os, true);
+            BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+            System.out.println("Bonjour, vous etes connecte");
+            pw.println(" vous êtes sur le port: " + clientSocket.getLocalPort());
+            pw.flush();
+            // os.close();
+
+            // afficher message du client
+            String line = null;
+            while ((line = br.readLine()) != null) {
+                System.out.println("Message du client: " + line);
+                pw.flush();
+                pw.println(line);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
