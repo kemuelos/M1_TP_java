@@ -1,8 +1,9 @@
 package src;
 
+// import java.io.InputStream;
 import java.io.OutputStream;
+// import java.net.ServerSocket;
 import java.net.Socket;
-
 
 /**
  * serveur
@@ -23,7 +24,7 @@ public class serveur {
 
     // constructeur serveur
     public serveur() {
-        
+
     }
 
     // getters et setters
@@ -67,16 +68,17 @@ public class serveur {
         System.out.println("Protocole: " + this.protocole);
     }
 
-
+    // methode pour ecouter le client
     public void listen() {
         try {
             Socket socket = new Socket("localhost", 5000);
+            System.out.println("Client connecté sur le port" + this.port);
             OutputStream os = socket.getOutputStream();
             os.write("Hello".getBytes());
             os.close();
             socket.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e);
         }
     }
 }
