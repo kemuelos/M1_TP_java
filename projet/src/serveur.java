@@ -1,75 +1,44 @@
 package src;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
+import java.util.*;
 
 /**
  * serveur
  */
 public class serveur {
+    private static ArrayList<Object> slist = new ArrayList<>();
+    private static ArrayList<Object> rlist = new ArrayList<>();
+
     public static void main(String[] args) {
-        ServerSocket serveur = null;
+        serveur s = new serveur();
+        s.ecouter();
+    }
+
+    public void ecouter() {
+        ServerSocket socket;
+
+        for (int i = 0; i < 10; i++) {
+            slist.add(new fiche("marque" + i, "modele" + i, "couleur" + i, "immatriculation" + i));
+        }
 
         try {
-            serveur = new ServerSocket(8003);
-            serveur.setReuseAddress(true);
+            socket = new ServerSocket(8003);
+            System.out.println("Serveur en attente de connexion");
 
             while (true) {
-                System.out.println("En attente de connexion");
-                Socket client = serveur.accept();
-                System.out.println("Connexion etablie");
+                Socket socketClient = socket.accept();
+                System.out.println("Connexion acceptee");
 
-                ClientHandler clientSock = new ClientHandler(client);
-
-                new Thread(clientSock).start();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (serveur != null) {
-                try {
-                    serveur.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-}
-
-class ClientHandler implements Runnable {
-    private Socket clientSocket = null;
-
-    public ClientHandler(Socket clientSocket) {
-        this.clientSocket = clientSocket;
-    }
-
-    public void run() {
-        try {
-            OutputStream os = clientSocket.getOutputStream();
-            PrintWriter pw = new PrintWriter(os, true);
-            BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
-            System.out.println("Bonjour, vous etes connecte");
-            pw.println(" vous êtes sur le port: " + clientSocket.getLocalPort());
-            pw.flush();
-            // os.close();
-
-            // afficher message du client
-            String line = null;
-            while ((line = br.readLine()) != null) {
-                System.out.println("Message du client: " + line);
-                pw.flush();
-                pw.println(line);
+                Thread t = new monthread(socketClient, slist, rlist);
+                System.out.println("Thread lance");
+                t.start();
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Erreur de connexion au serveur ");
         }
     }
+
 }

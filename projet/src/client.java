@@ -1,42 +1,66 @@
 package src;
 
-import java.net.Socket;
-import java.util.Scanner;
-import java.io.BufferedReader;
 import java.io.*;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.net.Socket;
 
 /**
  * client
  */
 public class client {
+
+    public static void remplirFiche(Object o) {
+        Scanner sc = new Scanner(System.in);
+        ArrayList<String> type_primitif = new ArrayList<String>(
+                Arrays.asList("int", "float", "double", "long", "boolean", "char", "byte", "short"));
+
+        for (Field f : o.getClass().getDeclaredFields()) {
+            System.out.println(
+                    "Veuillez saisir la valeur de l'attribut " + f.getName() + " de type " + f.getType().getName());
+            String value = sc.nextLine();
+            if (type_primitif.contains(f.getType().getName())) {
+                try {
+                    f.set(o, value);
+                } catch (IllegalArgumentException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                try {
+                    f.set(o, value);
+                } catch (IllegalArgumentException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        sc.close();
+
+    }
+
     public static void main(String[] args) {
+        Socket sock = null;
 
-        String host = "127.0.0.1";
-        int port = 8003;
+        try {
+            sock = new Socket("localhost", 8003);
+            System.out.println("Connexion établie");
 
-        try (Socket socket = new Socket(host, port)) {
-            PrintWriter pw = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            System.out.println("Entrez votre nom : ");
-            Scanner sc = new Scanner(System.in);
-            String line = null;
+            OutputStream out = sock.getOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(out);
+            InputStream is = sock.getInputStream();
+            ObjectInputStream ois = new ObjectInputStream(is);
 
-            line = sc.nextLine();
-            pw.println(line);
-            pw.flush();
-            System.out.println("Serveur:" + br.readLine());
-            // sc.close();
+            Object o = ois.readObject();
+            // remplir la fiche
+            remplirFiche(o);
+            System.out.println("objet recu");
+            oos.writeObject(o);
+            System.out.println("objet envoyé");
+        }
 
-            String line2 = null;
-            System.out.println("entrez un message : ");
-            line2 = sc.nextLine();
-            pw.println(line2);
-            pw.flush();
-            sc.close();
-
-        } catch (Exception e) {
+        catch (IOException e) {
+            System.out.println("Erreur de connexion au serveur ");
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
-
 }
